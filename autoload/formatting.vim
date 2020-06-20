@@ -12,17 +12,12 @@ function! formatting#empty_lines(count, above)
   call cursor(new_position)
 endfunction
 
-function! formatting#insert_mode_put()
-  let keys = "\<esc>g"
-  if col(".") == 1
-    let keys ..= "P"
-  else
-    let keys ..= "p"
+function! formatting#remove_trail_space()
+  if g:autoremove_trail_space
+    try
+      %s/\v\s+$//
+      normal! ``
+    catch /E486:/
+    endtry
   endif
-  if col(".") == col("$")
-    let keys ..= "a"
-  else
-    let keys ..= "i"
-  endif
-  return keys
 endfunction

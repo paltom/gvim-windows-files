@@ -81,7 +81,7 @@ augroup end
 augroup auto_remove_trail_space
   autocmd!
   let g:autoremove_trail_space = v:true
-  autocmd BufWrite * if g:autoremove_trail_space | %s/\v\s+$//e | endif
+  autocmd BufWrite * call formatting#remove_trail_space()
 augroup end
 " }}}
 
@@ -172,7 +172,7 @@ set guioptions+=c
 set guioptions+=!
 set guifont=Hack:h12:cEASTEUROPE:qDRAFT
 set clipboard+=unnamed
-inoremap <expr> <c-v> formatting#insert_mode_put()
+inoremap <expr> <c-v> edit#insert_mode_put()
 inoremap <c-g><c-v> <c-v>
 " }}}
 
@@ -181,20 +181,76 @@ imap <c-space> <Plug>(asyncomplete_force_refresh)
 " }}}
 
 " LSP {{{
+let g:lsp_semantic_enabled = 1
+let g:lsp_log_file = expand(fnamemodify(expand("$MYVIMRC"), ":h")..'/vim-lsp.log')
+let g:lsp_settings_servers_dir = expand(fnamemodify(expand("$MYVIMRC"), ":h").."/lsp")
+" Python
 if executable("pyls")
-  au User lsp_setup call lsp#register_server(#{
-      \ name: "pyls",
+  autocmd User lsp_setup call lsp#register_server(#{
+        \ name: "pyls",
         \ cmd: {server_info -> ["pyls"]},
         \ whitelist: ["python"],
         \})
 endif
+" Java
+" let s:lsp_servers_directory = expand(fnamemodify(expand("$MYVIMRC"), ":h").."/".."lsp")
+" let s:eclipse_ls_directory = expand(s:lsp_servers_directory.."/eclipse.jdt.ls")
+" let s:eclipse_ls_launcher_jar = expand(s:eclipse_ls_directory.."/plugins/org.eclipse.equinox.launcher_1.5.700.v20200207-2156.jar")
+" if executable("java") && filereadable(s:eclipse_ls_launcher_jar)
+"   autocmd User lsp_setup call lsp#register_server(#{
+"         \ name: "eclipse.jdt.ls",
+"         \ cmd: {server_info -> [
+"         \   &shell,
+"         \   &shellcmdflag,
+"         \   join([
+"         \     "java",
+"         \     "-Declipse.application=org.eclipse.jdt.ls.core.id1",
+"         \     "-Dosgi.bundles.defaultStartLevel=4",
+"         \     "-Declipse.product=org.eclipse.jdt.ls.core.product",
+"         \     "-Dlog.protocol=true",
+"         \     "-Dlog.level=ALL",
+"         \     "-noverify",
+"         \     "-Xmx1G",
+"         \     "-jar",
+"         \     s:eclipse_ls_launcher_jar,
+"         \     "-configuration",
+"         \     expand(s:eclipse_ls_directory.."/config_win"),
+"         \     "-data",
+"         \     getcwd(),
+"         \   ], " "),
+"         \ ]},
+"         \ root_uri: {server_info -> lsp#utils#path_to_uri(
+"         \   lsp#utils#find_nearest_parent_file_directory(
+"         \     lsp#utils#get_buffer_path(),
+"         \     ['pom.xml', 'build.gradle', '.project', '.classpath', '.git/']
+"         \ ))},
+"         \ whitelist: ["java"],
+"         \})
+" endif
+let g:lsp_settings = {
+      \ "eclipse-jdt-ls": #{
+      \     semantic_highlight: {
+      \         "entity.name.type.class.java": "Type",
+      \         "meta.definition.variable.java": "Define",
+      \         "entity.name.function.java": {
+      \           "meta.function-call.java": "Normal",
+      \           "meta.method.identifier.java": "Function"
+      \         },
+      \     },
+      \     root_uri: {server_info -> lsp#utils#path_to_uri(
+      \         lsp#utils#find_nearest_parent_file_directory(
+      \             lsp#utils#get_buffer_path(),
+      \             ['pom.xml', 'build.gradle', '.project', '.classpath', '.git/']
+      \     ))},
+      \ }
+      \}
 " }}}
 
 " Sessions {{{
 set sessionoptions-=help
 set sessionoptions+=resize
 set sessionoptions+=winpos
-let g:session_autoload = "no"
+let g:session_autoload = "yes"
 let g:session_autosave = "yes"
 let g:session_default_to_last = 1
 " }}}
